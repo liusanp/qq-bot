@@ -1,9 +1,11 @@
-from src.client.base_ability import Audio, BaseAbility
+from src.client.base_ability import Audio
 from src.utils.config import get as get_config
 import requests
 from fish_audio_sdk import Session, TTSRequest
 from botpy import logging
 import re
+import os
+from src.utils.snowflake import generate_id
 
 
 _log = logging.get_logger()
@@ -21,32 +23,38 @@ class FishAudio(Audio):
         self.get_models()
         
     
-    def get_response(self, message):
+    async def get_response(self, message):
         self.message = message
+        snowflake_id = generate_id()
         try:
             match = re.match(r'^说[（\(](.*?)[）\)][：:](.*)', message.content)
             ref_id = match.group(1)
             prompt = match.group(2)
             # print(f'ref_id: {ref_id}')
             # print(f'prompt: {prompt}')
-            self.gen_audio(prompt, self.message.id, ref_id)
-            has_up, url = self.uploader.upload(f'./data/{message.id}.mp3')
+            audio_file_path = f'./data/{snowflake_id}'
+            self.gen_audio(prompt, f'{audio_file_path}.mp3', ref_id)
+            self.convert_to_silk(audio_file_path)
+            has_up, url = self.uploader.upload(f'{audio_file_path}.silk')
             if has_up:
-                media_id = self.upload_media(url)
-                return self.get_res(media_id)
+                os.remove(f'{audio_file_path}.mp3')
+                os.remove(f'{audio_file_path}.silk')
+                media_id = await self.upload_media(url, 3)
+                return self.get_res(msg_type=7, media_id=media_id)
             else:
-                return self.get_res("服务不可用，请稍后再试。")
+                return self.get_res(content="服务不可用，请稍后再试。")
         except Exception as e:
             _log.error(e)
-            return self.get_res("服务不可用，请稍后再试。")
+            return self.get_res(content="服务不可用，请稍后再试。")
         
-    def gen_audio(self, prompt, id, ref_id="丁真"):
+    def gen_audio(self, prompt, file_path, ref_id="丁真"):
         self.get_models()
         # Option 1: Using a reference_id
-        with open(f'./data/{id}.mp3', "wb") as f:
+        with open(file_path, "wb") as f:
             for chunk in self.session.tts(TTSRequest(
                 reference_id=self.audio_id[ref_id],
-                text=prompt
+                text=prompt,
+                format='mp3'
             )):
                 f.write(chunk)
                 

@@ -34,7 +34,7 @@ class MainClient(botpy.Client):
     
     async def on_c2c_message_create(self, message: C2CMessage):
         _log.info(message)
-        res = route_message(message)
+        res = await route_message(message)
         await message._api.post_c2c_message(
             openid=message.author.user_openid, 
             msg_type=res.msg_type, 
@@ -80,7 +80,7 @@ class MainClient(botpy.Client):
         
     async def on_group_at_message_create(self, message: GroupMessage):
         _log.info(message)
-        res = route_message(message)
+        res = await route_message(message)
         await message._api.post_group_message(
             group_openid=message.group_openid,
             msg_type=res.msg_type, 

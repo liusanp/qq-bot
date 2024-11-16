@@ -1,1 +1,4 @@
 qq-botpy
+pydub
+fish-audio-sdk
+pilk

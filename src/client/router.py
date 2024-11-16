@@ -10,13 +10,13 @@ chat_instanse = ability_factory('chat', Chat)
 audio_instanse = ability_factory('audio', Audio)
 
 
-def route_message(message: BaseMessage) -> ResModel:
+async def route_message(message: BaseMessage) -> ResModel:
     content = message.content
     if content == "帮助":
         model_list = audio_instanse.get_model_list()
         msg = get_config("help_info")
         return chat_instanse.get_res(msg)
     elif re.match(r'^说[（\(](.*?)[）\)][：:](.*)', content):
-        return audio_instanse.get_response(message)
+        return await audio_instanse.get_response(message)
     else:
         return chat_instanse.get_response(message)

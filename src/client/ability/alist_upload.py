@@ -122,19 +122,19 @@ class AlistUpload(Upload):
         response = requests.request("put", self.alist_url + uri, headers=headers, data=payload, files=files)
         _log.info("upload res:" + response.text)
         res_json = response.json()
-        return res_json['code'] == 200, self.alist_show_url + upload_path + '/' + file_name
+        return res_json['code'] == 200, self.alist_show_url + '/d' + upload_path + '/' + file_name
 
 
     def upload(self, file_path):
         today_str = get_today_str()
         has_created, _ = self.get_dir_info(self.alist_bash_path + today_str)
         if not has_created:
-            _log.info("创建当日文件夹：", today_str)
+            _log.info(f"创建当日文件夹：{today_str}")
             has_created = self.create_dir(self.alist_bash_path + today_str)
         if has_created:
-            _log.info("上传文件：", file_path)
+            _log.info(f"上传文件：{file_path}")
             has_up, f_url = self.upload_file(file_path, self.alist_bash_path + today_str)
-            _log.info("file_url:", f_url)
+            _log.info(f"file_url: {f_url}")
             self.get_dir_list(self.alist_bash_path + today_str)
             return has_up, f_url
         return False, ""
