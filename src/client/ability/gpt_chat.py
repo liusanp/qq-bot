@@ -14,12 +14,18 @@ class GptChat(Chat, BaseAbility):
     
     def get_response(self, message):
         self.message = message
+        sys_prompt = get_config("system_prompt")
+        bot_name = get_config("qqbot.name")
         try:
             url = f"{self.openai_base_url}/v1/chat/completions"
 
             payload = json.dumps({
                 "model": self.openai_model,
                 "messages": [
+                    {
+                        "role": "system",
+                        "content": sys_prompt if sys_prompt else f"你是一个很有用的QQ辅助机器人[{bot_name}]。"
+                    },
                     {
                     "role": "user",
                     "content": message.content

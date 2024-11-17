@@ -22,6 +22,12 @@ class FishAudio(Audio):
         self.model_list = []
         self.get_models()
         
+    def get_help(self):
+        help_list = []
+        for m in self.model_list:
+            hm = f"说（{m}）：你好啊。"
+            help_list.append(hm)
+        return "发送【说（丁真）：你好啊】，生成语音。\n可用模型：\n" + '\n'.join(help_list)
     
     async def get_response(self, message):
         self.message = message
@@ -71,9 +77,9 @@ class FishAudio(Audio):
             if items and len(items) > 0:
                 self.model_list = []
                 for i in items:
-                    if i["title"] not in self.model_list:
-                        self.model_list.append(i["title"])
-                        self.audio_id[i["title"]] = i["_id"]
+                    if i["title"].strip() not in self.model_list:
+                        self.model_list.append(i["title"].strip())
+                        self.audio_id[i["title"].strip()] = i["_id"]
                 self.model_is_up = True
         except Exception as e:
             _log.error(e)

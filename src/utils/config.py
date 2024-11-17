@@ -10,3 +10,7 @@ def get(key: str) -> str:
         return config_data[key]
     else:
         return ""
+    
+
+def set(key: str, val: str):
+    config_data[key] = val

@@ -1,4 +1,4 @@
-from src.utils.config import get as get_config
+from src.utils.config import get as get_config, set as set_config
 import botpy
 from botpy import logging
 from botpy.message import C2CMessage, GroupMessage
@@ -12,6 +12,7 @@ _log = logging.get_logger()
 class MainClient(botpy.Client):
     async def on_ready(self):
         _log.info(f"robot 「{self.robot.name}」 on_ready!")
+        set_config("qqbot.name", self.robot.name)
         
     # ===== c2c =====
     async def on_friend_add(self, event: C2CManageEvent):
@@ -20,7 +21,7 @@ class MainClient(botpy.Client):
             openid=event.openid,
             msg_type=0,
             event_id=event.event_id,
-            content="hello",
+            content="回复帮助或者/help查看操作说明",
         )
 
     async def on_friend_del(self, event: C2CManageEvent):
@@ -66,7 +67,7 @@ class MainClient(botpy.Client):
             group_openid=event.group_openid,
             msg_type=0,
             event_id=event.event_id,
-            content="hello",
+            content="回复帮助或者/help查看操作说明",
         )
 
     async def on_group_del_robot(self, event: GroupManageEvent):

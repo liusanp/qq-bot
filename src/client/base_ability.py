@@ -10,7 +10,10 @@ class BaseAbility():
     def __init__(self) -> None:
         self.uploader = ability_factory('upload', Upload)
         
-    def get_res(self, msg_type=0, media_id=None, content=None):
+    def get_help(self) -> str:
+        return "能力操作说明"
+        
+    def get_res(self, msg_type=0, media_id=None, content=None) -> ResModel:
         """拼装返回
 
         Args:
@@ -76,9 +79,6 @@ class Audio(BaseAbility):
     async def get_response(self, message: BaseMessage):
         self.message = message
         return self.get_res(f'接收到消息：{message.content}')
-    
-    def get_model_list(self):
-        return []
         
     
 class Upload:

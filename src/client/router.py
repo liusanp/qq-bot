@@ -11,11 +11,12 @@ audio_instanse = ability_factory('audio', Audio)
 
 
 async def route_message(message: BaseMessage) -> ResModel:
-    content = message.content
-    if content == "帮助":
-        model_list = audio_instanse.get_model_list()
+    content = message.content.strip()
+    if content == "帮助" or content == '/help':
         msg = get_config("help_info")
-        return chat_instanse.get_res(msg)
+        return chat_instanse.get_res(content=msg)
+    elif content == '/audio':
+        return chat_instanse.get_res(content=audio_instanse.get_help())
     elif re.match(r'^说[（\(](.*?)[）\)][：:](.*)', content):
         return await audio_instanse.get_response(message)
     else:

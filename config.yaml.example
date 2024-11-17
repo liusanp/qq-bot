@@ -1,3 +1,4 @@
+qqbot.name: ""
 qqbot.appid: "123"
 qqbot.secret: "xxxx"
 
@@ -5,6 +6,7 @@ qqbot.secret: "xxxx"
 help_info: "使用方法：\n1、发送问题，生成答案。"
 
 # chat
+system_prompt: ""
 chat_type: "gpt"
 openai_base_url: "https://api.chatgpt.com"
 openai_api_key: "aabbcc"
