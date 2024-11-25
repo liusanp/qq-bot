@@ -20,4 +20,4 @@ async def route_message(message: BaseMessage) -> ResModel:
     elif re.match(r'^说[（\(](.*?)[）\)][：:](.*)', content):
         return await audio_instanse.get_response(message)
     else:
-        return chat_instanse.get_response(message)
+        return await chat_instanse.get_response(message)

@@ -2,3 +2,8 @@ qq-botpy
 pydub
 fish-audio-sdk
 pilk
+request
+markdown
+imgkit
+pymdown-extensions
+Pygments

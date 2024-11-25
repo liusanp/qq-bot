@@ -11,6 +11,7 @@ chat_type: "gpt"
 openai_base_url: "https://api.chatgpt.com"
 openai_api_key: "aabbcc"
 openai_model: 'gpt-4o-mini'
+md_2_img: "1"
 
 # audio
 audio_type: "fish"
