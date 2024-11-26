@@ -20,4 +20,8 @@ async def route_message(message: BaseMessage) -> ResModel:
     elif re.match(r'^说[（\(](.*?)[）\)][：:](.*)', content):
         return await audio_instanse.get_response(message)
     else:
-        return await chat_instanse.get_response(message)
+        if get_config("enable_chat"):
+            return await chat_instanse.get_response(message)
+        else:
+            msg = get_config("help_info")
+            return chat_instanse.get_res(content=msg)
