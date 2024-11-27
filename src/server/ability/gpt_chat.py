@@ -28,7 +28,7 @@ class GptChat(Chat):
                 "messages": [
                     {
                         "role": "system",
-                        "content": sys_prompt if sys_prompt else f"你是一个很有用的QQ辅助机器人[{bot_name}]。"
+                        "content": f"你是一个很有用的QQ辅助机器人[{bot_name}]。{sys_prompt}"
                     },
                     {
                     "role": "user",
