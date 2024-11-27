@@ -8,3 +8,9 @@ class ResModel():
         self.content = content
         self.msg_type = msg_type
     
+    def to_dict(self):
+        return {
+            'media': self.media,
+            'content': self.content,
+            'msg_type': self.msg_type
+        }

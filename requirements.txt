@@ -7,3 +7,4 @@ markdown
 imgkit
 pymdown-extensions
 Pygments
+sanic

@@ -1,27 +1,25 @@
 from botpy.message import BaseMessage
-from src.utils.ability_factory import ability_factory
-from src.client.base_ability import Chat, Audio
-from src.client.models.res_model import ResModel
-import re
+from src.server.models.res_model import ResModel
 from src.utils.config import get as get_config
+import requests
 
 
-chat_instanse = ability_factory('chat', Chat)
-audio_instanse = ability_factory('audio', Audio)
+url = f"{get_config('server_host')}:{get_config('server_port')}/handleMsg"
+
+headers = {
+    'Content-Type': 'application/json'
+}
 
 
 async def route_message(message: BaseMessage) -> ResModel:
-    content = message.content.strip()
-    if content == "帮助" or content == '/help':
-        msg = get_config("help_info")
-        return chat_instanse.get_res(content=msg)
-    elif content == '/audio':
-        return chat_instanse.get_res(content=audio_instanse.get_help())
-    elif re.match(r'^说[（\(](.*?)[）\)][：:](.*)', content):
-        return await audio_instanse.get_response(message)
-    else:
-        if get_config("enable_chat"):
-            return await chat_instanse.get_response(message)
-        else:
-            msg = get_config("help_info")
-            return chat_instanse.get_res(content=msg)
+    res = ResModel(content="服务暂时不可用，请稍后再试。")
+    payload = message.__str__().replace('"', '').replace("'", '"').replace('"None"', 'None').replace('None', '"None"')
+    # print('payload', payload)
+    response = requests.request("POST", url, headers=headers, data=payload)
+    if response.status_code == 200:
+        res_json = response.json()
+        print(res_json)
+        if res_json['code'] == 0:
+            return ResModel(media=res_json['data']['media'], content=res_json['data']['content'], msg_type=res_json['data']['msg_type'])
+    return res
+        

@@ -4,7 +4,7 @@ from datetime import datetime
 import os
 from urllib.parse import quote
 from src.utils.config import get as get_config
-from src.client.base_ability import Upload
+from src.server.base_ability import Upload
 from src.utils.config import get as get_config
 from botpy import logging
 

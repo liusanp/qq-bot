@@ -9,7 +9,7 @@ def convert_to_camel_case(snake_str):
 def ability_factory(type: str, classz):
     chat_type = get_config(f"{type}_type")
     # 指定子类模块的完整路径
-    module_name = f'src.client.ability.{chat_type}_{type}'
+    module_name = f'src.server.ability.{chat_type}_{type}'
     class_name = convert_to_camel_case(f'{chat_type}_{type}')
 
     try:

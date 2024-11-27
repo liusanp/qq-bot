@@ -1,14 +1,16 @@
-from src.client.models.res_model import ResModel
-from botpy.message import C2CMessage, GroupMessage, BaseMessage
+from src.server.models.res_model import ResModel
+from botpy.http import BotHttp, Route
 from src.utils.ability_factory import ability_factory
 from pydub import AudioSegment
 import os
 import pilk
+from src.utils.config import get as get_config, set as set_config
 
 
 class BaseAbility():
     def __init__(self) -> None:
         self.uploader = ability_factory('upload', Upload)
+        self._http = BotHttp(timeout=5, app_id=get_config("qqbot.appid"), secret=get_config("qqbot.secret"))
         
     def get_help(self) -> str:
         return "能力操作说明"
@@ -47,19 +49,27 @@ class BaseAbility():
         Returns:
             _type_: _description_
         """
-        
-        if isinstance(self.message, C2CMessage):
-            media_id = await self.message._api.post_c2c_file(
-                openid=self.message.author.user_openid, 
-                file_type=file_type,
-                url=file_url
-            )
-        elif isinstance(self.message, GroupMessage):
-            media_id = await self.message._api.post_group_file(
-                group_openid=self.message.group_openid, 
-                file_type=file_type,
-                url=file_url
-            )
+        event_id = self.message['event_id']
+        self.message['file_type'] = file_type
+        self.message['url'] = file_url
+        if event_id.find('C2C') > -1:
+            openid = self.message['author']['user_openid']
+            route = Route("POST", "/v2/users/{openid}/files", openid=openid)
+            media_id = await self._http.request(route=route, json=self.message)
+            # media_id = await self.message._api.post_c2c_file(
+            #     openid=self.message['author']['user_openid'], 
+            #     file_type=file_type,
+            #     url=file_url
+            # )
+        elif event_id.find('GROUP') > -1:
+            group_openid=self.message['group_openid']
+            route = Route("POST", "/v2/groups/{group_openid}/files", group_openid=group_openid)
+            media_id = await self._http.request(route=route, json=self.message)
+            # media_id = await self.message._api.post_group_file(
+            #     group_openid=self.message['group_openid'], 
+            #     file_type=file_type,
+            #     url=file_url
+            # )
         return media_id
 
 
@@ -67,18 +77,18 @@ class Chat(BaseAbility):
     def __init__(self) -> None:
         super().__init__()
         
-    def get_response(self, message: BaseMessage):
+    def get_response(self, message):
         self.message = message
-        return self.get_res(f'接收到消息：{message.content}')
+        return self.get_res(f'接收到消息：{message["content"]}')
 
 
 class Audio(BaseAbility):
     def __init__(self) -> None:
         super().__init__()
         
-    async def get_response(self, message: BaseMessage):
+    async def get_response(self, message):
         self.message = message
-        return self.get_res(f'接收到消息：{message.content}')
+        return self.get_res(f'接收到消息：{message["content"]}')
         
     
 class Upload:

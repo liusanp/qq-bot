@@ -1,4 +1,4 @@
-from src.client.base_ability import Audio
+from src.server.base_ability import Audio
 from src.utils.config import get as get_config
 import requests
 from fish_audio_sdk import Session, TTSRequest
@@ -33,7 +33,7 @@ class FishAudio(Audio):
         self.message = message
         snowflake_id = generate_id()
         try:
-            match = re.match(r'^说[（\(](.*?)[）\)][：:](.*)', message.content)
+            match = re.match(r'^说[（\(](.*?)[）\)][：:](.*)', message['content'])
             ref_id = match.group(1)
             prompt = match.group(2)
             # print(f'ref_id: {ref_id}')

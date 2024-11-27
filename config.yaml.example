@@ -2,6 +2,11 @@ qqbot.name: ""
 qqbot.appid: "123"
 qqbot.secret: "xxxx"
 
+# server
+server_host: "127.0.0.1"
+server_port: "1359"
+server_token: "abc"
+
 # menu
 help_info: "使用方法：\n1、发送问题，生成答案。"
 

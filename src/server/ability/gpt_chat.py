@@ -1,4 +1,4 @@
-from src.client.base_ability import Chat, BaseAbility
+from src.server.base_ability import Chat, BaseAbility
 from src.utils.config import get as get_config
 import json
 import requests
@@ -32,7 +32,7 @@ class GptChat(Chat, BaseAbility):
                     },
                     {
                     "role": "user",
-                    "content": message.content
+                    "content": message['content']
                     }
                 ],
                 "stream": False
