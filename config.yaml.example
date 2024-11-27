@@ -1,14 +1,14 @@
-qqbot.name: ""
+qqbot.name: "小鸡气人"
 qqbot.appid: "123"
 qqbot.secret: "xxxx"
 
 # server
-server_host: "127.0.0.1"
+server_host: "http://127.0.0.1"
 server_port: "1359"
 server_token: "abc"
 
 # menu
-help_info: "使用方法：\n1、发送问题，生成答案。\n2、发送 /audio 获取语音能力说明。\n3、发送 /image 获取图像能力说明。\n"
+help_info: "使用方法：\n1、发送问题，生成答案。\n2、发送 /audio 获取语音能力说明。\n3、发送 /image 获取图像能力说明。\n4、发送 /video 获取视频能力说明。\n"
 
 # chat
 system_prompt: ""
