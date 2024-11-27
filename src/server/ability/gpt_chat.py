@@ -1,4 +1,4 @@
-from src.server.base_ability import Chat, BaseAbility
+from src.server.base_ability import Chat
 from src.utils.config import get as get_config
 import json
 import requests
@@ -8,7 +8,7 @@ from src.utils.snowflake import generate_id
 import os
 
 
-class GptChat(Chat, BaseAbility):
+class GptChat(Chat):
     
     def __init__(self) -> None:
         super().__init__()

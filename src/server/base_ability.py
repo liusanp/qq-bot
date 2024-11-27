@@ -10,6 +10,7 @@ from src.utils.config import get as get_config, set as set_config
 class BaseAbility():
     def __init__(self) -> None:
         self.uploader = ability_factory('upload', Upload)
+        self.translater = ability_factory('translate', Translate)
         self._http = BotHttp(timeout=5, app_id=get_config("qqbot.appid"), secret=get_config("qqbot.secret"))
         
     def get_help(self) -> str:
@@ -95,3 +96,19 @@ class Upload:
     def upload(self, file_path):
         raise NotImplementedError("This method should be overridden by subclasses.")
     
+
+class Translate:
+    def trans(self, src_text):
+        if get_config("enable_translate"):
+            return src_text
+        else:
+            raise NotImplementedError("This method should be overridden by subclasses.")
+    
+
+class Image(BaseAbility):
+    def __init__(self) -> None:
+        super().__init__()
+        
+    def get_response(self, message):
+        self.message = message
+        return self.get_res(f'接收到消息：{message["content"]}')

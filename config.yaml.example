@@ -8,7 +8,7 @@ server_port: "1359"
 server_token: "abc"
 
 # menu
-help_info: "使用方法：\n1、发送问题，生成答案。"
+help_info: "使用方法：\n1、发送问题，生成答案。\n2、发送 /audio 获取语音能力说明。\n3、发送 /image 获取图像能力说明。\n"
 
 # chat
 system_prompt: ""
@@ -33,3 +33,12 @@ alist_username: "user"
 alist_password: "password"
 alist_token: "abc"
 alist_token_date: "1900-01-01"
+
+# translate
+enable_translate: "1"
+translate_type: "baidu"
+bd_appid: ""
+bd_secret: ""
+
+# image
+image_type: "flux"

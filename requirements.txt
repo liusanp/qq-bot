@@ -8,3 +8,5 @@ imgkit
 pymdown-extensions
 Pygments
 sanic
+sseclient
+pillow
