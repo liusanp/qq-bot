@@ -42,3 +42,6 @@ bd_secret: ""
 
 # image
 image_type: "flux"
+
+# video
+video_type: "down"

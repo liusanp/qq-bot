@@ -1,6 +1,6 @@
 from botpy.message import BaseMessage
 from src.utils.ability_factory import ability_factory
-from src.server.base_ability import Chat, Audio, Image
+from src.server.base_ability import Chat, Audio, Image, Video
 from src.server.models.res_model import ResModel
 import re
 from src.utils.config import get as get_config
@@ -9,6 +9,7 @@ from src.utils.config import get as get_config
 chat_instanse = ability_factory('chat', Chat)
 audio_instanse = ability_factory('audio', Audio)
 image_instanse = ability_factory('image', Image)
+video_instanse = ability_factory('video', Video)
 
 
 async def route_message(message) -> ResModel:
@@ -24,6 +25,10 @@ async def route_message(message) -> ResModel:
         return image_instanse.get_res(content=image_instanse.get_help())
     elif re.match(r'^画(?:\s*[\(（](\d{1,4})x(\d{1,4})[\)）])?\s*[：:](.+)', content):
         return await image_instanse.get_response(message)
+    elif content == '/video':
+        return video_instanse.get_res(content=video_instanse.get_help())
+    elif re.match(r'^下载视频[：:](.*)', content):
+        return await video_instanse.get_response(message)
     else:
         if get_config("enable_chat"):
             return await chat_instanse.get_response(message)

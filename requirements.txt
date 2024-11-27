@@ -10,3 +10,6 @@ Pygments
 sanic
 sseclient
 pillow
+m3u8
+tqdm
+yt-dlp
