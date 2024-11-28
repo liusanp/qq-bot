@@ -99,7 +99,7 @@ class FluxImage(ImageClass):
             "trigger_id": 10,
             "session_hash": sess_hash
         })
-        print(payload)
+        # print(payload)
         headers = {
             'content-type': 'application/json',
             'origin': 'https://kingnish-realtime-flux.hf.space',
@@ -108,9 +108,9 @@ class FluxImage(ImageClass):
         }
 
         response = requests.request("POST", url, headers=headers, data=payload)
-        print(response.text)
+        _log.info(response.text)
         img_url = response.json()['data'][0]['url']
-        print(f'img_url: {img_url}')
+        _log.info(f'img_url: {img_url}')
         if img_url:
             img_path = f'./data/{id}.png'
             self.download_and_convert_image(img_url, img_path)
@@ -132,7 +132,7 @@ class FluxImage(ImageClass):
         headers = {}
         response = requests.request("GET", url, headers=headers, data=payload)
         hf_token = response.json()["token"]
-        print(f'hf_token: {hf_token}')
+        _log.info(f'hf_token: {hf_token}')
         
         # 提交任务
         sess_hash = self.generate_random_string()
@@ -171,11 +171,11 @@ class FluxImage(ImageClass):
             'x-zerogpu-token': hf_token
         }
         response = requests.post(url, headers=headers, data=payload)
-        print(f'task_res: {response.text}')
+        _log.info(f'task_res: {response.text}')
         if 'event_id' in response.json():
             # 获取图片地址
             img_url = self.fetch_image_url(sess_hash)
-            print(f'img_url: {img_url}')
+            _log.info(f'img_url: {img_url}')
             if img_url:
                 img_path = f'./data/{id}.png'
                 self.download_and_convert_image(img_url, img_path)
