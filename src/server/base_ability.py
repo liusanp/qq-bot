@@ -16,7 +16,7 @@ class BaseAbility():
     def get_help(self) -> str:
         return "能力操作说明"
         
-    def get_res(self, msg_type=0, media_id=None, content=None) -> ResModel:
+    def get_res(self, msg_type=0, media_id=None, content=None, file_type=1) -> ResModel:
         """拼装返回
 
         Args:
@@ -27,7 +27,7 @@ class BaseAbility():
         Returns:
             _type_: _description_
         """
-        res = ResModel(media=media_id, msg_type=msg_type, content=content)
+        res = ResModel(media=media_id, msg_type=msg_type, content=content, file_type=file_type)
         return res
     
     def convert_to_silk(self, media_path: str) -> str:

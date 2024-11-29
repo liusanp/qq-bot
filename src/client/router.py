@@ -1,4 +1,4 @@
-from botpy.message import BaseMessage
+from botpy.message import BaseMessage, C2CMessage, GroupMessage
 from src.server.models.res_model import ResModel
 from src.utils.config import get as get_config
 import requests
@@ -20,6 +20,26 @@ async def route_message(message: BaseMessage) -> ResModel:
         res_json = response.json()
         print(res_json)
         if res_json['code'] == 0:
+            if res_json['media']:
+                res_json = upload_media(res_json)
             return ResModel(media=res_json['data']['media'], content=res_json['data']['content'], msg_type=res_json['data']['msg_type'])
     return res
         
+
+async def upload_media(message: BaseMessage, res_json):
+    file_url = res_json['data']['media']  # 这里需要填写上传的资源Url
+    file_type = res_json['data']['file_type']
+    if isinstance(message, C2CMessage):
+        uploadMedia = await message._api.post_c2c_file(
+            openid=message.author.user_openid, 
+            file_type=file_type, # 文件类型要对应上，具体支持的类型见方法说明
+            url=file_url # 文件Url
+        )
+    elif isinstance(message, GroupMessage):
+        uploadMedia = await message._api.post_group_file(
+            group_openid=message.group_openid, 
+            file_type=file_type, # 文件类型要对应上，具体支持的类型见方法说明
+            url=file_url # 文件Url
+        )
+    res_json['data']['media'] = uploadMedia
+    return res_json

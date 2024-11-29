@@ -45,8 +45,7 @@ class FishAudio(Audio):
             if has_up:
                 os.remove(f'{audio_file_path}.mp3')
                 os.remove(f'{audio_file_path}.silk')
-                media_id = await self.upload_media(url, 3)
-                return self.get_res(msg_type=7, media_id=media_id)
+                return self.get_res(msg_type=7, media_id=url, file_type=3)
             else:
                 return self.get_res(content="服务不可用，请稍后再试。")
         except Exception as e:

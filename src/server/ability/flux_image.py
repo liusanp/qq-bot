@@ -117,8 +117,7 @@ class FluxImage(ImageClass):
             has_up, url = self.uploader.upload(img_path)
             if has_up:
                 os.remove(img_path)
-                media_id = await self.upload_media(url, 1)
-                return self.get_res(msg_type=7, media_id=media_id)
+                return self.get_res(msg_type=7, media_id=url, file_type=1)
             else:
                 return self.get_res(content="服务不可用，请稍后再试。")
         else:
@@ -182,8 +181,7 @@ class FluxImage(ImageClass):
                 has_up, url = self.uploader.upload(img_path)
                 if has_up:
                     os.remove(img_path)
-                    media_id = await self.upload_media(url, 1)
-                    return self.get_res(msg_type=7, media_id=media_id)
+                    return self.get_res(msg_type=7, media_id=url, file_type=1)
                 else:
                     return self.get_res(content="服务不可用，请稍后再试。")
             else:
