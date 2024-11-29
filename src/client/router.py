@@ -21,7 +21,7 @@ async def route_message(message: BaseMessage) -> ResModel:
         print(res_json)
         if res_json['code'] == 0:
             if res_json['data']['media']:
-                res_json = upload_media(message, res_json)
+                res_json = await upload_media(message, res_json)
             return ResModel(media=res_json['data']['media'], content=res_json['data']['content'], msg_type=res_json['data']['msg_type'])
     return res
         
