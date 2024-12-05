@@ -24,7 +24,7 @@ class FluxImage(ImageClass):
         self.siliconflow_token = get_config("siliconflow_token")
         
     def get_help(self):
-        return "发送【画：一只小鸡】，生成图片。或者【画（1:1）：一只小鸡】，生成指定宽高图片，宽高比例可选项：1:1, 1:2, 3:2, 3:4, 16:9, 9:16。"
+        return "发送【画：一只小鸡】，生成图片。或者【画（1:1）：一只小鸡】，生成指定宽高图片，宽高比例可选项：1:1, 1:2, 3:2, 3:4, 16:9, 9:16。\n示例：\n画：一个美丽的女孩，带着鲜花和一瓶香水，以新艺术风格的插图，深金色和天蓝色，迈克尔·马尔琴科，竹内直子，深青色和红色，帕特里夏·波拉科，多彩的梦想。"
     
     def generate_random_string(self, length=10):
         # 生成包含字母和数字的随机字符串
