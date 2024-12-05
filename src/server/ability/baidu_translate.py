@@ -12,7 +12,7 @@ class BaiduTranslate(Translate):
         self.bd_appid = get_config("bd_appid")
         self.bd_secret = get_config("bd_secret")
     
-    def get_response(self, src_text):
+    def trans(self, src_text):
         # For list of language codes, please refer to `https://api.fanyi.baidu.com/doc/21`
         from_lang = 'auto'
         to_lang =  'en'

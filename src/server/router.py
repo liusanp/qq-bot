@@ -23,7 +23,7 @@ async def route_message(message) -> ResModel:
         return await audio_instanse.get_response(message)
     elif content == '/image':
         return image_instanse.get_res(content=image_instanse.get_help())
-    elif re.match(r'^画(?:\s*[\(（](\d{1,4})x(\d{1,4})[\)）])?\s*[：:](.+)', content):
+    elif re.match(r'^画(?:\s*[\(（](\d{1,2}[:：]\d{1,2})[\)）])?\s*[：:](.+)', content):
         return await image_instanse.get_response(message)
     elif content == '/video':
         return video_instanse.get_res(content=video_instanse.get_help())

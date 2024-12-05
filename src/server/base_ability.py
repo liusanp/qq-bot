@@ -99,15 +99,31 @@ class Upload:
 
 class Translate:
     def trans(self, src_text):
-        if get_config("enable_translate"):
+        if not get_config("enable_translate"):
             return src_text
         else:
             raise NotImplementedError("This method should be overridden by subclasses.")
     
 
 class Image(BaseAbility):
+    
+    imgwh = {
+        "1:1": "1024x1024",
+        "1:2": "512x1024",
+        "3:2": "768x512",
+        "3:4": "768x1024",
+        "16:9": "1024x576",
+        "9:16": "576x1024",
+    }
+    
     def __init__(self) -> None:
         super().__init__()
+        
+    def get_wh_by_ratio(self, ratio="1:1"):
+        if ratio not in self.imgwh:
+            ratio = "1:1"
+        whs = self.imgwh[ratio].split('x')
+        return whs[0], whs[1]
         
     def get_response(self, message):
         self.message = message

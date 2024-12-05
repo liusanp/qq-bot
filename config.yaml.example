@@ -42,6 +42,7 @@ bd_secret: ""
 
 # image
 image_type: "flux"
+siliconflow_token: ""
 
 # video
 video_type: "down"

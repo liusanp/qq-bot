@@ -21,12 +21,10 @@ class FluxImage(ImageClass):
     
     def __init__(self) -> None:
         super().__init__()
-        self.openai_base_url = get_config("openai_base_url")
-        self.openai_api_key = get_config("openai_api_key")
-        self.openai_model = get_config("openai_model")
+        self.siliconflow_token = get_config("siliconflow_token")
         
     def get_help(self):
-        return "发送【画：一只小鸡】，生成图片。或者【画（1024x1024）：一只小鸡】，生成指定宽高图片，宽高限定最小512最大1024。"
+        return "发送【画：一只小鸡】，生成图片。或者【画（1:1）：一只小鸡】，生成指定宽高图片，宽高比例可选项：1:1, 1:2, 3:2, 3:4, 16:9, 9:16。"
     
     def generate_random_string(self, length=10):
         # 生成包含字母和数字的随机字符串
@@ -52,34 +50,53 @@ class FluxImage(ImageClass):
         
     async def get_response(self, message):
         self.message = message
+        _log.info(message)
         snowflake_id = generate_id()
         try:
             prompt = message['content']
-            match = re.match(r'^画(?:\s*[\(（](\d{1,4})x(\d{1,4})[\)）])?\s*[：:](.+)', prompt)
-            width = 1024
-            height = 1024
+            match = re.match(r'^画(?:\s*[\(（](\d{1,2}[:：]\d{1,2})[\)）])?\s*[：:](.+)', prompt)
+            ratio = "1:1"
             if match:
                 if match.group(1):
-                    width = int(match.group(1))
-                if match.group(2):
-                    height = int(match.group(2))
-                prompt = match.group(3)
-            if width > 1024:
-                width = 1024
-            if width < 512:
-                width = 512
-            if height > 1024:
-                height = 1024
-            if height < 512:
-                height = 512
+                    ratio = match.group(1)
+                prompt = match.group(2)
+            width, height = self.get_wh_by_ratio(ratio)
             prompt = self.translater.trans(prompt)
-            k_res = await self.get_img_response_kingnish(prompt, snowflake_id, width, height)
-            if k_res:
-                return k_res
-            else:
-                return await self.get_img_response_blackforest(prompt, snowflake_id, width, height)
+            _log.info(prompt)
+            k_res = await self.get_img_response_siliconflow(prompt, snowflake_id, width, height)
+            return k_res
         except Exception as e:
             _log.error(e)
+            return self.get_res(content="服务不可用，请稍后再试。")
+        
+    async def get_img_response_siliconflow(self, prompt, id, width=1024, height=1024):
+        url = "https://api.siliconflow.cn/v1/images/generations"
+        
+        payload = {
+            "model": "black-forest-labs/FLUX.1-schnell",
+            "prompt": prompt,
+            "image_size": f"{width}x{height}",
+            "prompt_enhancement": False
+        }
+        headers = {
+            "Authorization": f"Bearer {self.siliconflow_token}",
+            "Content-Type": "application/json"
+        }
+
+        response = requests.request("POST", url, json=payload, headers=headers)
+        _log.info(response.text)
+        img_url = response.json()['images'][0]['url']
+        _log.info(f'img_url: {img_url}')
+        if img_url:
+            img_path = f'./data/{id}.png'
+            self.download_and_convert_image(img_url, img_path)
+            has_up, url = self.uploader.upload(img_path)
+            if has_up:
+                os.remove(img_path)
+                return self.get_res(msg_type=7, media_id=url, file_type=1)
+            else:
+                return self.get_res(content="服务不可用，请稍后再试。")
+        else:
             return self.get_res(content="服务不可用，请稍后再试。")
     
     async def get_img_response_kingnish(self, prompt, id, width=1024, height=1024):
