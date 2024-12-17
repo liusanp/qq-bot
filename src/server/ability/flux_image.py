@@ -12,6 +12,7 @@ import os
 from datetime import datetime, timedelta
 import sseclient
 from PIL import Image
+import time
 
 
 _log = logging.get_logger()
@@ -22,9 +23,10 @@ class FluxImage(ImageClass):
     def __init__(self) -> None:
         super().__init__()
         self.siliconflow_token = get_config("siliconflow_token")
+        self.comfyui_host = get_config("comfyui_host")
         
     def get_help(self):
-        return "发送【画：一只小鸡】，生成图片。或者【画（1:1）：一只小鸡】，生成指定宽高图片，宽高比例可选项：1:1, 1:2, 3:2, 3:4, 16:9, 9:16。\n示例：\n画：一个美丽的女孩，带着鲜花和一瓶香水，以新艺术风格的插图，深金色和天蓝色，迈克尔·马尔琴科，竹内直子，深青色和红色，帕特里夏·波拉科，多彩的梦想。"
+        return "发送【画：一只小鸡】，生成图片。或者【画（1:1）：一只小鸡】，生成指定宽高图片，宽高比例可选项：1:1, 1:2, 3:2, 3:4, 16:9, 9:16。\n示例：\n画：一个美丽的女孩，带着鲜花和一瓶香水，以新艺术风格的插图，深金色和天蓝色，迈克尔·马尔琴科，竹内直子，深青色和红色，帕特里夏·波拉科，多彩的梦想。\n\n发送照片，风格重绘。"
     
     def generate_random_string(self, length=10):
         # 生成包含字母和数字的随机字符串
@@ -39,7 +41,7 @@ class FluxImage(ImageClass):
     
     def download_and_convert_image(self, image_url, save_path):
         # 下载图片
-        response = requests.get(image_url)
+        response = requests.get(image_url, verify=False)
         if response.status_code == 200:
             # 使用Pillow处理图像
             img = Image.open(BytesIO(response.content))
@@ -64,6 +66,83 @@ class FluxImage(ImageClass):
             prompt = self.translater.trans(prompt)
             _log.info(prompt)
             k_res = await self.get_img_response_siliconflow(prompt, snowflake_id, width, height)
+            return k_res
+        except Exception as e:
+            _log.error(e)
+            return self.get_res(content="服务不可用，请稍后再试。")
+        
+    async def get_response_change_style(self, message):
+        snowflake_id = generate_id()
+        self.message = message
+        attr = message['attachments']
+        attr_content_type = attr[-1]['content_type']
+        attr_url = attr[-1]['url']
+        if 'image' not in attr_content_type:
+            return self.get_res(content="发送帮助获取使用方法")
+        try:
+            # 下载图片
+            img_path = f'./data/{snowflake_id}.png'
+            self.download_and_convert_image(attr_url, img_path)
+            # 上传图片
+            url = f"{self.comfyui_host}/upload/image"
+            payload = {}
+            files=[
+                ('image',(f'{snowflake_id}.png',open(img_path,'rb'),'image/png'))
+            ]
+            headers = {}
+            response = requests.request("POST", url, headers=headers, data=payload, files=files)
+            _log.info(response.text)
+            # 启动解析prompt队列
+            url = f"{self.comfyui_host}/prompt"
+            payload = json.dumps({
+            "client_id": f"{snowflake_id}",
+            "prompt": {
+                "25": {
+                "inputs": {
+                    "image": f'{snowflake_id}.png',
+                    "upload": "image"
+                },
+                "class_type": "LoadImage"
+                },
+                "26": {
+                "inputs": {
+                    "model": "wd-v1-4-moat-tagger-v2",
+                    "threshold": 0.35,
+                    "character_threshold": 0.85,
+                    "replace_underscore": False,
+                    "trailing_comma": False,
+                    "exclude_tags": "",
+                    "image": [
+                    "25",
+                    0
+                    ]
+                },
+                "class_type": "WD14Tagger|pysssss"
+                }
+            }
+            })
+            headers = {
+                'Content-Type': 'application/json'
+            }
+            response = requests.request("POST", url, headers=headers, data=payload)
+            _log.info(response.text)
+            prompt_id = response.json()['prompt_id']
+            # 获取队列结果
+            while True:
+                time.sleep(1)
+                url = f"{self.comfyui_host}/history/{prompt_id}"
+                payload = {}
+                headers = {}
+                response = requests.request("GET", url, headers=headers, data=payload)
+                _log.info(response.text)
+                if prompt_id in response.json():
+                    img_prompt = response.json()[prompt_id]['outputs']['26']['tags'][0]
+                    break
+            # 拼接提示词
+            final_prompt = f'strong Pixel style, high quality, detailed, Illustration, minimalist avatar, colorful, (realistic:1.5), (half-length portrait:1.5), (oval shape face:1.0), (disheveled:1.0),  (skin details, skin texture:0.5), (skin pores:0.3), (eyes details:1.2), (iris details:1.2), (circular iris:1.2), (circular pupil:1.2), (facial asymmetry, face asymmetry:0.2), (detailed, professional photo, perfect exposition:1.25), (film grain:1.5), {img_prompt}, (shinny skin, reflections on the skin, skin reflections:1.5)'
+            # 文生图
+            width, height = self.get_wh_by_ratio('3:4')
+            k_res = await self.get_img_response_siliconflow(final_prompt, snowflake_id, width, height)
             return k_res
         except Exception as e:
             _log.error(e)

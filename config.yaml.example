@@ -43,6 +43,7 @@ bd_secret: ""
 # image
 image_type: "flux"
 siliconflow_token: ""
+comfyui_host: ""
 
 # video
 video_type: "down"
