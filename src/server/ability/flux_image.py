@@ -141,7 +141,7 @@ class FluxImage(ImageClass):
             # 拼接提示词
             final_prompt = f'strong Pixel style, high quality, detailed, Illustration, minimalist avatar, colorful, (realistic:1.5), (half-length portrait:1.5), (oval shape face:1.0), (disheveled:1.0),  (skin details, skin texture:0.5), (skin pores:0.3), (eyes details:1.2), (iris details:1.2), (circular iris:1.2), (circular pupil:1.2), (facial asymmetry, face asymmetry:0.2), (detailed, professional photo, perfect exposition:1.25), (film grain:1.5), {img_prompt}, (shinny skin, reflections on the skin, skin reflections:1.5)'
             # 文生图
-            width, height = self.get_wh_by_ratio('3:4')
+            width, height = self.get_wh_by_ratio('1:1')
             k_res = await self.get_img_response_siliconflow(final_prompt, snowflake_id, width, height)
             return k_res
         except Exception as e:
