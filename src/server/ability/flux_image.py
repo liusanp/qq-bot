@@ -13,6 +13,7 @@ from datetime import datetime, timedelta
 import sseclient
 from PIL import Image
 import time
+from src.utils.hf_util import req_img2img, req_text2img
 
 
 _log = logging.get_logger()
@@ -26,7 +27,7 @@ class FluxImage(ImageClass):
         self.comfyui_host = get_config("comfyui_host")
         
     def get_help(self):
-        return "发送【画：一只小鸡】，生成图片。或者【画（1:1）：一只小鸡】，生成指定宽高图片，宽高比例可选项：1:1, 1:2, 3:2, 3:4, 16:9, 9:16。\n示例：\n画：一个美丽的女孩，带着鲜花和一瓶香水，以新艺术风格的插图，深金色和天蓝色，迈克尔·马尔琴科，竹内直子，深青色和红色，帕特里夏·波拉科，多彩的梦想。\n\n发送照片，风格重绘。"
+        return "1、发送【画：一只小鸡】，生成图片。或者【画（1:1）：一只小鸡】，生成指定宽高图片，宽高比例可选项：1:1, 1:2, 3:2, 3:4, 16:9, 9:16。\n示例：\n画：一个美丽的女孩，带着鲜花和一瓶香水，以新艺术风格的插图，深金色和天蓝色，迈克尔·马尔琴科，竹内直子，深青色和红色，帕特里夏·波拉科，多彩的梦想。\n\n2、发送照片和风格，重绘照片，指定风格生成时间较长，请耐心等待。可用风格：小鸡气人、蓝色简约、黄色卡通"
     
     def generate_random_string(self, length=10):
         # 生成包含字母和数字的随机字符串
@@ -41,6 +42,7 @@ class FluxImage(ImageClass):
     
     def download_and_convert_image(self, image_url, save_path):
         # 下载图片
+        _log.info(f"download url: {image_url}")
         response = requests.get(image_url, verify=False)
         if response.status_code == 200:
             # 使用Pillow处理图像
@@ -74,6 +76,10 @@ class FluxImage(ImageClass):
     async def get_response_change_style(self, message):
         snowflake_id = generate_id()
         self.message = message
+        prompt = message['content']
+        img_style = get_config(f"img_style")
+        if prompt and prompt in img_style:
+            return await self.get_response_change_style_assign(message)
         attr = message['attachments']
         attr_content_type = attr[-1]['content_type']
         attr_url = attr[-1]['url']
@@ -148,6 +154,39 @@ class FluxImage(ImageClass):
             _log.error(e)
             return self.get_res(content="服务不可用，请稍后再试。")
         
+    async def get_response_change_style_assign(self, message):
+        snowflake_id = generate_id()
+        self.message = message
+        img_style = get_config(f"img_style")
+        hf_token = get_config("hf_token")
+        style = message['content']
+        attr = message['attachments']
+        attr_content_type = attr[-1]['content_type']
+        attr_url = attr[-1]['url']
+        if 'image' not in attr_content_type:
+            return self.get_res(content="发送帮助获取使用方法")
+        try:
+            # 上传原始图片
+            src_img_path = f'./data/{snowflake_id}-source.png'
+            self.download_and_convert_image(attr_url, src_img_path)
+            has_up, src_img_url = self.uploader.upload(src_img_path)
+            # 转换图片风格
+            res = req_img2img(src_img_url, img_style[style], hf_token=hf_token)
+            res_img = Image.open(res)
+            img_path = f'./data/{snowflake_id}.png'
+            # 下载图片
+            res_img.save(img_path, 'PNG')
+            has_up, url = self.uploader.upload(img_path)
+            if has_up:
+                os.remove(src_img_path)
+                os.remove(img_path)
+                return self.get_res(msg_type=7, media_id=url, file_type=1)
+            else:
+                return self.get_res(content="服务不可用，请稍后再试。")
+        except Exception as e:
+            _log.error(e)
+            return self.get_res(content="服务不可用，请稍后再试。")
+        
     async def get_img_response_siliconflow(self, prompt, id, width=1024, height=1024):
         url = "https://api.siliconflow.cn/v1/images/generations"
         
@@ -179,147 +218,15 @@ class FluxImage(ImageClass):
             return self.get_res(content="服务不可用，请稍后再试。")
     
     async def get_img_response_kingnish(self, prompt, id, width=1024, height=1024):
-        url = "https://kingnish-realtime-flux.hf.space/run/predict"
-        sess_hash = self.generate_random_string()
-        payload = json.dumps({
-            "data": [
-                prompt,
-                69,
-                width,
-                height,
-                True,
-                5
-            ],
-            "event_data": None,
-            "fn_index": 3,
-            "trigger_id": 10,
-            "session_hash": sess_hash
-        })
-        # print(payload)
-        headers = {
-            'content-type': 'application/json',
-            'origin': 'https://kingnish-realtime-flux.hf.space',
-            'referer': 'https://kingnish-realtime-flux.hf.space/?__theme=light',
-            'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36'
-        }
-
-        response = requests.request("POST", url, headers=headers, data=payload)
-        _log.info(response.text)
-        img_url = response.json()['data'][0]['url']
-        _log.info(f'img_url: {img_url}')
-        if img_url:
-            img_path = f'./data/{id}.png'
-            self.download_and_convert_image(img_url, img_path)
-            has_up, url = self.uploader.upload(img_path)
-            if has_up:
-                os.remove(img_path)
-                return self.get_res(msg_type=7, media_id=url, file_type=1)
-            else:
-                return self.get_res(content="服务不可用，请稍后再试。")
+        hf_token = get_config("hf_token")
+        res = req_text2img("KingNish/Realtime-FLUX", prompt, width, height, id, hf_token)
+        res_img = Image.open(res)
+        img_path = f'./data/{id}.png'
+        res_img.save(img_path, 'PNG')
+        has_up, url = self.uploader.upload(img_path)
+        if has_up:
+            os.remove(img_path)
+            return self.get_res(msg_type=7, media_id=url, file_type=1)
         else:
             return self.get_res(content="服务不可用，请稍后再试。")
         
-        
-    async def get_img_response_blackforest(self, prompt, id, width=1024, height=1024):
-        # 获取token
-        url = f"https://huggingface.co/api/spaces/black-forest-labs/FLUX.1-schnell/jwt?expiration={self.gen_time_str()}&include_pro_status=true"
-        payload = {}
-        headers = {}
-        response = requests.request("GET", url, headers=headers, data=payload)
-        hf_token = response.json()["token"]
-        _log.info(f'hf_token: {hf_token}')
-        
-        # 提交任务
-        sess_hash = self.generate_random_string()
-        url = "https://black-forest-labs-flux-1-schnell.hf.space/queue/join?__theme=light"
-        payload = json.dumps({
-            "data": [
-                prompt,
-                716811884,
-                True,
-                width,
-                height,
-                4
-            ],
-            "event_data": None,
-            "fn_index": 2,
-            "trigger_id": 5,
-            "session_hash": sess_hash
-        })
-        headers = {
-            'accept': '*/*',
-            'accept-language': 'zh-CN,zh;q=0.9',
-            'cache-control': 'no-cache',
-            'content-type': 'application/json',
-            # 'cookie': '_ga=GA1.2.376343665.1709177677; _ga_R1FN4KJKJH=GS1.1.1709177676.1.1.1709178488.0.0.0',
-            'origin': 'https://black-forest-labs-flux-1-schnell.hf.space',
-            'pragma': 'no-cache',
-            'priority': 'u=1, i',
-            'referer': 'https://black-forest-labs-flux-1-schnell.hf.space/?__theme=light',
-            'sec-ch-ua': '"Google Chrome";v="129", "Not=A?Brand";v="8", "Chromium";v="129"',
-            'sec-ch-ua-mobile': '?0',
-            'sec-ch-ua-platform': '"Windows"',
-            'sec-fetch-dest': 'empty',
-            'sec-fetch-mode': 'cors',
-            'sec-fetch-site': 'same-origin',
-            'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36',
-            'x-zerogpu-token': hf_token
-        }
-        response = requests.post(url, headers=headers, data=payload)
-        _log.info(f'task_res: {response.text}')
-        if 'event_id' in response.json():
-            # 获取图片地址
-            img_url = self.fetch_image_url(sess_hash)
-            _log.info(f'img_url: {img_url}')
-            if img_url:
-                img_path = f'./data/{id}.png'
-                self.download_and_convert_image(img_url, img_path)
-                has_up, url = self.uploader.upload(img_path)
-                if has_up:
-                    os.remove(img_path)
-                    return self.get_res(msg_type=7, media_id=url, file_type=1)
-                else:
-                    return self.get_res(content="服务不可用，请稍后再试。")
-            else:
-                return self.get_res(content="服务不可用，请稍后再试。")
-        else:
-            return self.get_res(content="服务不可用，请稍后再试。")
-        
-    def fetch_image_url(self, sess_hash):
-        # 请求头
-        headers = {
-            'accept': '*/*',
-            'accept-language': 'zh-CN,zh;q=0.9',
-            'cache-control': 'no-cache',
-            'content-type': 'application/json',
-            'cookie': '_ga=GA1.2.376343665.1709177677; _ga_R1FN4KJKJH=GS1.1.1709177676.1.1.1709178488.0.0.0',
-            'origin': 'https://black-forest-labs-flux-1-schnell.hf.space',
-            'pragma': 'no-cache',
-            'priority': 'u=1, i',
-            'referer': 'https://black-forest-labs-flux-1-schnell.hf.space/?__theme=light',
-            'sec-ch-ua': '"Google Chrome";v="129", "Not=A?Brand";v="8", "Chromium";v="129"',
-            'sec-ch-ua-mobile': '?0',
-            'sec-ch-ua-platform': '"Windows"',
-            'sec-fetch-dest': 'empty',
-            'sec-fetch-mode': 'cors',
-            'sec-fetch-site': 'same-origin',
-            'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36'
-        }
-        # SSE 请求URL
-        url = f'https://black-forest-labs-flux-1-schnell.hf.space/queue/data?session_hash={sess_hash}'
-        # 发送请求
-        # response = requests.get(url, headers=headers, stream=True)
-        # print(f'stream_res: {response.text}')
-        # 使用 sseclient 处理 SSE 数据流
-        client = sseclient.SSEClient(url)
-        # 监听事件流
-        for event in client:
-            try:
-                # 解析事件数据，通常是 JSON 格式
-                data = event.data
-                print(f"Received data: {data}")
-                data_json = json.loads(data)
-                if 'msg' in data_json and data_json['msg'] == "process_completed":
-                    return data_json['output']['data'][0]['url']
-            except Exception as e:
-                print(f"Error parsing event: {e}")

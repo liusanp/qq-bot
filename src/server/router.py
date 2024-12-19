@@ -20,7 +20,7 @@ async def route_message(message) -> ResModel:
     _log.info(message)
     content = message['content'].strip()
     attr = message['attachments']
-    if not content and attr and len(attr) > 0:
+    if attr and len(attr) > 0:
         return await image_instanse.get_response_change_style(message)
     if content == "帮助" or content == '/help':
         msg = get_config("help_info")
