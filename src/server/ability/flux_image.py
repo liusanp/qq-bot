@@ -10,10 +10,10 @@ import string
 from io import BytesIO
 import os
 from datetime import datetime, timedelta
-import sseclient
+import shutil
 from PIL import Image
 import time
-from src.utils.hf_util import req_img2img, req_text2img
+from src.utils.hf_util import req_img2img, req_text2img, req_wav2lip
 
 
 _log = logging.get_logger()
@@ -27,7 +27,7 @@ class FluxImage(ImageClass):
         self.comfyui_host = get_config("comfyui_host")
         
     def get_help(self):
-        return "1、发送【画：一只小鸡】，生成图片。或者【画（1:1）：一只小鸡】，生成指定宽高图片，宽高比例可选项：1:1, 1:2, 3:2, 3:4, 16:9, 9:16。\n示例：\n画：一个美丽的女孩，带着鲜花和一瓶香水，以新艺术风格的插图，深金色和天蓝色，迈克尔·马尔琴科，竹内直子，深青色和红色，帕特里夏·波拉科，多彩的梦想。\n\n2、发送照片和风格，重绘照片，指定风格生成时间较长，请耐心等待。可用风格：小鸡气人、蓝色简约、黄色卡通"
+        return "1、发送【画：一只小鸡】，生成图片。或者【画（1:1）：一只小鸡】，生成指定宽高图片，宽高比例可选项：1:1, 1:2, 3:2, 3:4, 16:9, 9:16。\n示例：\n画：一个美丽的女孩，带着鲜花和一瓶香水，以新艺术风格的插图，深金色和天蓝色，迈克尔·马尔琴科，竹内直子，深青色和红色，帕特里夏·波拉科，多彩的梦想。\n\n2、发送照片和风格，重绘照片，指定风格生成时间较长，请耐心等待。可用风格：小鸡气人、蓝色简约、黄色卡通\n\n3、发送照片和风格，人物对口型，指定风格生成时间较长，请耐心等待。可用风格：快乐是什么"
     
     def generate_random_string(self, length=10):
         # 生成包含字母和数字的随机字符串
@@ -78,8 +78,11 @@ class FluxImage(ImageClass):
         self.message = message
         prompt = message['content']
         img_style = get_config(f"img_style")
+        voice_style = get_config(f"voice_style")
         if prompt and prompt in img_style:
             return await self.get_response_change_style_assign(message)
+        if prompt and prompt in voice_style:
+            return await self.get_response_wav2lip(message)
         attr = message['attachments']
         attr_content_type = attr[-1]['content_type']
         attr_url = attr[-1]['url']
@@ -215,6 +218,37 @@ class FluxImage(ImageClass):
             else:
                 return self.get_res(content="服务不可用，请稍后再试。")
         else:
+            return self.get_res(content="服务不可用，请稍后再试。")
+        
+    async def get_response_wav2lip(self, message):
+        snowflake_id = generate_id()
+        self.message = message
+        voice_style = get_config(f"voice_style")
+        hf_token = get_config("hf_token")
+        style = message['content']
+        attr = message['attachments']
+        attr_content_type = attr[-1]['content_type']
+        attr_url = attr[-1]['url']
+        if 'image' not in attr_content_type:
+            return self.get_res(content="发送帮助获取使用方法")
+        try:
+            # 上传原始图片
+            src_img_path = f'./data/{snowflake_id}-source.png'
+            self.download_and_convert_image(attr_url, src_img_path)
+            has_up, src_img_url = self.uploader.upload(src_img_path)
+            # 对嘴型
+            res = req_wav2lip(src_img_url, voice_style[style], hf_token=hf_token)
+            video_path = f'./data/{snowflake_id}.mp4'
+            shutil.copy(res['video'], video_path)
+            has_up, url = self.uploader.upload(video_path)
+            if has_up:
+                os.remove(src_img_path)
+                os.remove(video_path)
+                return self.get_res(msg_type=7, media_id=url, file_type=2)
+            else:
+                return self.get_res(content="服务不可用，请稍后再试。")
+        except Exception as e:
+            _log.error(e)
             return self.get_res(content="服务不可用，请稍后再试。")
     
     async def get_img_response_kingnish(self, prompt, id, width=1024, height=1024):

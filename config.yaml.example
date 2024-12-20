@@ -47,6 +47,8 @@ comfyui_host: ""
 img_style: 
   blue: "https://example.com/blue.jpg"
 hf_token: ""
+voice_style: 
+  klssm: "https://example.com/klssm.mp3"
 
 # video
 video_type: "down"
