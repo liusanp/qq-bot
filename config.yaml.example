@@ -52,3 +52,6 @@ voice_style:
 
 # video
 video_type: "down"
+
+# database
+mysql: "mysql+mysqldb://root:password@localhost:3306/my_database"
