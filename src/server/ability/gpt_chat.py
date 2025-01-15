@@ -23,7 +23,7 @@ class GptChat(Chat):
             self.sys_prompt = sys_default_prompt
         self.bot_name = get_config("qqbot.name")
         self.help_info = get_config("help_info")
-        self.sys_role = f"\n时刻谨记你是QQ辅助机器人，你的名字是[{self.bot_name}]。你的功能有{self.help_info}\n{self.sys_prompt}"
+        self.sys_role = f"\n时刻谨记你是辅助机器人，你的名字是[{self.bot_name}]。你的功能有{self.help_info}\n{self.sys_prompt}"
     
     async def get_response(self, message):
         self.message = message
