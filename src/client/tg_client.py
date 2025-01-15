@@ -16,6 +16,5 @@ class TgClient():
         
 async def handle_message(update: Update, context):
     res = await route_message(update.message)
-
     # 回复用户消息
-    await update.message.reply_markdown_v2("test")
+    await update.message.reply_markdown(res.content)
