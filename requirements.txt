@@ -13,3 +13,4 @@ pillow
 m3u8
 tqdm
 yt-dlp
+python-telegram-bot

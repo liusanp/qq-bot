@@ -2,6 +2,8 @@ qqbot.name: "小鸡气人"
 qqbot.appid: "123"
 qqbot.secret: "xxxx"
 
+tg.token: "xxxx"
+
 # server
 server_host: "http://127.0.0.1"
 server_port: "1359"
