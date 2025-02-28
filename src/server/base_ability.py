@@ -72,6 +72,10 @@ class BaseAbility():
             #     url=file_url
             # )
         return media_id
+    
+    def save_msg(self, message):
+        # 保存消息到数据库
+        pass
 
 
 class Chat(BaseAbility):
@@ -81,6 +85,10 @@ class Chat(BaseAbility):
     def get_response(self, message):
         self.message = message
         return self.get_res(f'接收到消息：{message["content"]}')
+    
+    def save_msg(self, message):
+        # 保存消息到数据库
+        pass
 
 
 class Audio(BaseAbility):
