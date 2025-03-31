@@ -28,5 +28,5 @@ python qq-bot.py
 
 ```shell
 # 服务端，负责处理消息。可以和消息端部署在不同服务器。配置
-python qq-bot-backend.py
+python bot-backend.py
 ```
